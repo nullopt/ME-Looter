@@ -48,11 +48,6 @@ A class responsible for managing the looting process.
    looter:lootItemsBasedOnPrice(500, 10) -- Example: minimum price 500, max distance 10
    ```
 
-## Dependencies
-
-- **API**: A module required for reading objects and performing actions.
-- **JSON**: A module for decoding JSON data.
-
 ## Notes
 
 - TODO: The `getUnnotedItemId` method is currently a placeholder and needs implementation.
