@@ -1,5 +1,4 @@
 local API = require("api")
-local JSON = require("JSON")
 
 ---@class GEData
 ---@field examine? string
@@ -48,9 +47,10 @@ function Looter:loadItemData()
     local response = handle:read("*a")
     handle:close()
     print("Download complete! - Parsing JSON...")
+
     ---@type table<string, GEData>
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    local json_value = JSON:decode(response)
+    local json_value = JsonDecode(response)
+
     local count = 0
     for _ in pairs(json_value) do
         count = count + 1
