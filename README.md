@@ -46,6 +46,12 @@ A class responsible for managing the looting process.
 
    ```lua
    looter:lootItemsBasedOnPrice(500, 10) -- Example: minimum price 500, max distance 10
+
+   looter:lootItemsBasedOnHighAlch(500, 10)
+
+   looter:lootSelectedItemsAndBasedOnPrice({995, 4151}, 500, 10)
+
+   looter:lootSelectedItemsAndBasedOnHighAlch({995, 4151}, 500, 10)
    ```
 
 ## Notes

@@ -2,7 +2,7 @@
     File: looter.lua
     Description: This file contains the Looter class which manages the looting of items based on their price.
     Author: nullopt
-    Version: 1.1.0
+    Version: 1.2.0
 
     TODO:
     - Implement the getUnnotedItemId function
@@ -101,8 +101,9 @@ end
 
 ---@param minimumPrice number
 ---@param maxDistance number
----@return nil
-function Looter:lootItemsBasedOnPrice(minimumPrice, maxDistance)
+---@param type "price" | "highalch"
+---@return number[]
+function Looter:getItemsToLoot(minimumPrice, maxDistance, type)
     ---@type AllObject[]
     local itemIdsInRange = self:getItemsInRange(maxDistance)
 
@@ -111,19 +112,40 @@ function Looter:lootItemsBasedOnPrice(minimumPrice, maxDistance)
     for _, item in ipairs(itemIdsInRange) do
         ---@type GEData
         local itemData = self.itemData[tostring(item.Id)]
-        if not itemData or itemData.price == nil then
+        if not itemData or itemData[type] == nil then
             itemData = {
                 id = item.Id,
                 name = tostring(item.Id),
-                price = self.defaultItemPrice
+                [type] = self.defaultItemPrice
             }
         end
         -- todo: fix for noted items
-        if itemData.price ~= nil and itemData.price >= minimumPrice then
-            print("Found an item that is worth looting: " .. itemData.name .. " Price: " .. itemData.price)
+        if itemData[type] ~= nil and itemData[type] >= minimumPrice then
+            print("Found an item that is worth looting: " .. itemData.name .. " Price: " .. itemData[type])
             table.insert(itemsToLoot, item.Id)
         end
     end
+    return itemsToLoot
+end
+
+---@param minimumPrice number
+---@param maxDistance number
+---@return nil
+function Looter:lootItemsBasedOnPrice(minimumPrice, maxDistance)
+    ---@type number[]
+    local itemsToLoot = self:getItemsToLoot(minimumPrice, maxDistance, "price")
+
+    if not API.InvFull_() then
+        API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
+    end
+end
+
+---@param minimumPrice number
+---@param maxDistance number
+---@return nil
+function Looter:lootItemsBasedOnHighAlch(minimumPrice, maxDistance)
+    ---@type number[]
+    local itemsToLoot = self:getItemsToLoot(minimumPrice, maxDistance, "highalch")
 
     if not API.InvFull_() then
         API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
@@ -136,6 +158,19 @@ end
 ---@return nil
 function Looter:lootSelectedItemsAndBasedOnPrice(itemsToLoot, minimumPrice, maxDistance)
     self:lootItemsBasedOnPrice(minimumPrice, maxDistance)
+
+    if not API.InvFull_() then
+        API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
+        return
+    end
+end
+
+---@param itemsToLoot number[]
+---@param minimumPrice number
+---@param maxDistance number
+---@return nil
+function Looter:lootSelectedItemsAndBasedOnHighAlch(itemsToLoot, minimumPrice, maxDistance)
+    self:lootItemsBasedOnHighAlch(minimumPrice, maxDistance)
 
     if not API.InvFull_() then
         API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
