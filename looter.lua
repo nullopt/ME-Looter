@@ -1,3 +1,15 @@
+--[[
+    File: looter.lua
+    Description: This file contains the Looter class which manages the looting of items based on their price.
+    Author: nullopt
+    Version: 1.1.0
+
+    TODO:
+    - Implement the getUnnotedItemId function
+    - Implement delay between looting using TIMER so that it doesn't loot random items
+    - Implement stack looting, that will bypass inventory full check
+]]
+
 local API = require("api")
 
 ---@class GEData
@@ -16,6 +28,9 @@ local API = require("api")
 ---@field volume? number
 local GEData = {}
 
+---@class Looter
+---@field itemData table<string, GEData>
+---@field defaultItemPrice number
 local Looter = {}
 Looter.__index = Looter
 
@@ -91,11 +106,12 @@ function Looter:lootItemsBasedOnPrice(minimumPrice, maxDistance)
     ---@type AllObject[]
     local itemIdsInRange = self:getItemsInRange(maxDistance)
 
+    ---@type number[]
     local itemsToLoot = {}
     for _, item in ipairs(itemIdsInRange) do
         ---@type GEData
         local itemData = self.itemData[tostring(item.Id)]
-        if not itemData then
+        if not itemData or itemData.price == nil then
             itemData = {
                 id = item.Id,
                 name = tostring(item.Id),
@@ -103,13 +119,28 @@ function Looter:lootItemsBasedOnPrice(minimumPrice, maxDistance)
             }
         end
         -- todo: fix for noted items
-        if itemData.price >= minimumPrice then
+        if itemData.price ~= nil and itemData.price >= minimumPrice then
             print("Found an item that is worth looting: " .. itemData.name .. " Price: " .. itemData.price)
             table.insert(itemsToLoot, item.Id)
         end
     end
 
-    API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
+    if not API.InvFull_() then
+        API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
+    end
+end
+
+---@param itemsToLoot number[]
+---@param minimumPrice number
+---@param maxDistance number
+---@return nil
+function Looter:lootSelectedItemsAndBasedOnPrice(itemsToLoot, minimumPrice, maxDistance)
+    self:lootItemsBasedOnPrice(minimumPrice, maxDistance)
+
+    if not API.InvFull_() then
+        API.DoAction_Loot_w(itemsToLoot, maxDistance, API.PlayerCoordfloat(), maxDistance)
+        return
+    end
 end
 
 return Looter
